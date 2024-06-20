@@ -9,6 +9,13 @@
         "description": "Name of the Azure App Service."
       }
     },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "ContactDatabaseAppServicePlan",
+      "metadata": {
+        "description": "Name of the Azure App Service Plan."
+      }
+    },
     "sqlServerName": {
       "type": "string",
       "defaultValue": "contactdatabasesql",
@@ -34,18 +41,32 @@
   "variables": {},
   "resources": [
     {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "F1",
+        "tier": "Free"
+      },
+      "properties": {}
+    },
+    {
       "type": "Microsoft.Web/sites",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2020-06-01",
       "name": "[parameters('appName')]",
       "location": "[parameters('location')]",
       "kind": "app",
       "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appName'), 'ServicePlan'))]"
-      }
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      ]
     },
     {
       "type": "Microsoft.Sql/servers",
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2020-11-01-preview",
       "name": "[parameters('sqlServerName')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -57,7 +78,7 @@
         {
           "name": "[parameters('sqlDatabaseName')]",
           "type": "databases",
-          "apiVersion": "2015-05-01-preview",
+          "apiVersion": "2020-11-01-preview",
           "location": "[parameters('location')]",
           "properties": {
             "collation": "SQL_Latin1_General_CP1_CI_AS",
